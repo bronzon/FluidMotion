@@ -10,37 +10,27 @@ public class InterpolatedFixedMovement : MonoBehaviour {
 
     private readonly Vector3 simulationMovementPerFixedUpdate = new Vector3(0.1f, 0, 0);
     private readonly Quaternion simluatedRotationPerFixedUpdate = Quaternion.AngleAxis(1f, Vector3.up);
-    private bool pause = true;
+    private bool pause = false;
+    private float deltaTime = 0;
 
-    void Start() {
-        StartCoroutine(UnPause());
+    void Awake() {
+        Time.timeScale = 0.1f;
     }
-
-    private IEnumerator UnPause() {
-        yield return new WaitForSeconds(3);
-        pause = false;
-    }
-
+    
+    
     void Update() {
-        if (pause) {
-            return;
-        }
-        
-        transform.localPosition = Vector3.Lerp(startPoint, destinationPoint, InterpolationManager.InterpolationFactor);
-        transform.localRotation = Quaternion.Lerp(startRotation, destinationRotation, InterpolationManager.InterpolationFactor);
-        //Debug.Log("current: " + transform.localPosition.x + " " + Time.frameCount);
+        deltaTime += Time.deltaTime;
+        var scale = Mathf.Min(1, deltaTime / Time.fixedDeltaTime);
+        transform.localPosition = Vector3.Lerp(startPoint, destinationPoint, scale);
+        transform.localRotation = Quaternion.Lerp(startRotation, destinationRotation, scale);
     }
 
     void FixedUpdate() {
-        if (pause) {
-            return;
-        }
-        
         startPoint = destinationPoint != Vector3.zero ? destinationPoint : transform.localPosition;
         startRotation = destinationRotation != Quaternion.identity ? destinationRotation : transform.localRotation;
         
         destinationPoint = startPoint + simulationMovementPerFixedUpdate;
         destinationRotation = startRotation * simluatedRotationPerFixedUpdate;
-       // Debug.Log("from " + startPoint.x + " to " + destinationPoint.x + " " + Time.frameCount);
+        deltaTime = 0;
     }    
 }
